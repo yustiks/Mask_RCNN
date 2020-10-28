@@ -44,10 +44,22 @@ def log(text, array=None):
         text += ("shape: {:20}  ".format(str(array.shape)))
         if array.size:
             text += ("min: {:10.5f}  max: {:10.5f}".format(array.min(),array.max()))
-        else:
+        else:a
             text += ("min: {:10}  max: {:10}".format("",""))
         text += "  {}".format(array.dtype)
     print(text)
+
+
+class AnchorsLayer(tf.keras.layers.Layer):
+    def __init__(self, name="anchors", **kwargs):
+        super(AnchorsLayer, self).__init__(name=name, **kwargs)
+
+    def call(self, anchor):
+        return anchor
+
+    def get_config(self):
+        config = super(AnchorsLayer, self).get_config()
+        return config
 
 
 class BatchNorm(KL.BatchNormalization):
@@ -1931,7 +1943,10 @@ class MaskRCNN():
             # TODO: can this be optimized to avoid duplicating the anchors?
             anchors = np.broadcast_to(anchors, (config.BATCH_SIZE,) + anchors.shape)
             # A hack to get around Keras's bad support for constants
-            anchors = KL.Lambda(lambda x: tf.Variable(anchors), name="anchors")(input_image)
+            #anchors = KL.Lambda(lambda x: tf.Variable(anchors), name="anchors")(input_image)
+
+            anchor_layer = AnchorsLayer(name="anchors")
+            anchors = anchor_layer(anchors)
         else:
             anchors = input_anchors
 
